@@ -1,0 +1,2 @@
+# Preserve native CSV bytes so retained artifact hashes survive checkout.
+validation/**/measurements/*.csv -text whitespace=cr-at-eol

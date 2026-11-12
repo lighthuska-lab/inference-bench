@@ -1,0 +1,49 @@
+{
+  "request": {
+    "model": "smollm2-135m-q4-k-m",
+    "messages": [
+      {
+        "role": "user",
+        "content": "List the integers from one through one hundred, separated by commas."
+      }
+    ],
+    "stream": false,
+    "max_completion_tokens": 8
+  },
+  "response": {
+    "choices": [
+      {
+        "finish_reason": "length",
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "1. 1\n2. "
+        }
+      }
+    ],
+    "created": 1794520546,
+    "model": "smollm2-135m-q4-k-m",
+    "system_fingerprint": "b12110-cd959bae9",
+    "object": "chat.completion",
+    "usage": {
+      "completion_tokens": 8,
+      "prompt_tokens": 43,
+      "total_tokens": 51,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "id": "chatcmpl-Hb5xHsoYzr9D1HpBjFv96ilF0wjxduvs",
+    "timings": {
+      "cache_n": 0,
+      "prompt_n": 43,
+      "prompt_ms": 377.513,
+      "prompt_per_token_ms": 8.779372093023255,
+      "prompt_per_second": 113.90336226831924,
+      "predicted_n": 8,
+      "predicted_ms": 184.423,
+      "predicted_per_token_ms": 26.34614285714286,
+      "predicted_per_second": 37.95622021114503
+    }
+  }
+}

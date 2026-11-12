@@ -1,0 +1,73 @@
+{
+  "purpose": "Real-backend compatibility validation; not a hardware benchmark claim",
+  "tool_source_commit": "9c38ec919c04af9eebb716bffc74a6a1e8df8191",
+  "backend": {
+    "project": "ggml-org/llama.cpp",
+    "release_tag": "b12110",
+    "reported_version": "0.9.0-dev (build 12110, commit cd959bae9)",
+    "asset": "llama-b12110-bin-macos-x64.tar.gz",
+    "asset_url": "https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-macos-x64.tar.gz",
+    "asset_sha256": "c8094268b6bf62f4998f0e45656fd9f5e2d4afb6b1cd0044d761db64be1dd47d",
+    "license": "MIT",
+    "gpu_layers": 0,
+    "op_offload": false,
+    "generation_threads": 2,
+    "batch_threads": 2,
+    "parallel_slots": 2,
+    "total_context_tokens": 2048,
+    "context_tokens_per_slot": 1024,
+    "temperature": 0,
+    "seed": 42,
+    "prompt_cache_enabled": false,
+    "ram_prompt_cache_mib": 0,
+    "cache_idle_slots": false,
+    "network_mode": "offline weights, HTTP listener bound to 127.0.0.1 only",
+    "configured_n_predict": 32,
+    "reported_default_n_predict": -1
+  },
+  "model": {
+    "source": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "quantized_repository": "bartowski/SmolLM2-135M-Instruct-GGUF",
+    "revision": "09816acd5d99df7be770d85ea30822623dab342c",
+    "file": "SmolLM2-135M-Instruct-Q4_K_M.gguf",
+    "sha256": "2e8040ceae7815abe0dcb3540b9995eaa1fa0d2ca9e797d0a635ae4433c68c2d",
+    "bytes": 105454432,
+    "quantization": "Q4_K_M",
+    "license": "Apache-2.0",
+    "tokenizer": "Embedded in the pinned GGUF artifact; server-reported token counts were not retokenized",
+    "served_alias": "smollm2-135m-q4-k-m"
+  },
+  "client": {
+    "architecture": "x86_64",
+    "logical_cpus": 8,
+    "macos_version": "26.7.2",
+    "python_version": "3.12.16",
+    "placement": "same host as server, loopback HTTP",
+    "exact_cpu_brand": null,
+    "installed_ram_bytes": null,
+    "hardware_detail_limit": "Sandbox denied sysctl access to CPU brand and RAM. The developer host was not isolated from other applications."
+  },
+  "workload": {
+    "prompt": "List the integers from one through one hundred, separated by commas.",
+    "trial_order": [
+      1,
+      2,
+      2,
+      1,
+      1,
+      2
+    ],
+    "measured_requests_per_trial": 8,
+    "warmups_per_trial": 1,
+    "max_completion_tokens": 16,
+    "socket_timeout_seconds": 60,
+    "stream": false,
+    "paid_api_calls": 0
+  },
+  "limits": [
+    "Only this model, quantization, backend build, and non-streaming path were validated.",
+    "Small samples are unsuitable for p99 or server-capacity conclusions.",
+    "Raw request results do not record finish reasons. Direct probe explicitly confirms a length stop.",
+    "Model and tokenizer weights and backend binaries are not redistributed in this repository."
+  ]
+}

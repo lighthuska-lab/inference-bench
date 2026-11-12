@@ -1,0 +1,71 @@
+{
+  "purpose": "real-backend compatibility, not a hardware capacity claim",
+  "client": {
+    "architecture": "x86_64",
+    "logical_cpus": 8,
+    "macos_version": "26.7.2",
+    "python_version": "3.12.16"
+  },
+  "trials": [
+    {
+      "report": "trial-01-c1.json",
+      "concurrency": 1,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 554.7378928749822,
+      "successful_requests_per_second": 1.7521449235253252,
+      "completion_tokens_per_second": 28.034318776405204,
+      "requests_reporting_output_limit_tokens": 8
+    },
+    {
+      "report": "trial-02-c2.json",
+      "concurrency": 2,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 819.3343493730936,
+      "successful_requests_per_second": 2.378615326263027,
+      "completion_tokens_per_second": 38.057845220208435,
+      "requests_reporting_output_limit_tokens": 8
+    },
+    {
+      "report": "trial-03-c2.json",
+      "concurrency": 2,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 546.3811393747164,
+      "successful_requests_per_second": 3.5765313523945097,
+      "completion_tokens_per_second": 57.224501638312155,
+      "requests_reporting_output_limit_tokens": 8
+    },
+    {
+      "report": "trial-04-c1.json",
+      "concurrency": 1,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 266.4365113760141,
+      "successful_requests_per_second": 3.628301968282767,
+      "completion_tokens_per_second": 58.05283149252427,
+      "requests_reporting_output_limit_tokens": 8
+    },
+    {
+      "report": "trial-05-c1.json",
+      "concurrency": 1,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 263.4859276313364,
+      "successful_requests_per_second": 3.66553184107386,
+      "completion_tokens_per_second": 58.64850945718176,
+      "requests_reporting_output_limit_tokens": 8
+    },
+    {
+      "report": "trial-06-c2.json",
+      "concurrency": 2,
+      "successful_requests": 8,
+      "failed_requests": 0,
+      "mean_latency_ms": 579.3308966258337,
+      "successful_requests_per_second": 3.3513481646861436,
+      "completion_tokens_per_second": 53.6215706349783,
+      "requests_reporting_output_limit_tokens": 8
+    }
+  ]
+}
