@@ -72,9 +72,13 @@ weights as Apache-2.0.
 ## Reproduce without overwriting the evidence
 
 Download the pinned artifacts into a temporary directory. These commands use the
-macOS-x64 build and standard `shasum` available on macOS.
+macOS-x64 build and standard `shasum` available on macOS. The block runs in a
+separate Bash process with fail-fast checks. A failed download or checksum stops
+it before extraction or execution.
 
 ```bash
+bash <<'BASH'
+set -euo pipefail
 BACKEND_DIR="$(mktemp -d)"
 curl --fail --location \
   https://github.com/ggml-org/llama.cpp/releases/download/b12110/llama-b12110-bin-macos-x64.tar.gz \
@@ -96,6 +100,7 @@ tar -xzf "$BACKEND_DIR/llama.tar.gz" -C "$BACKEND_DIR"
   --n-gpu-layers 0 --no-op-offload --no-cache-prompt \
   --cache-ram 0 --no-cache-idle-slots --n-predict 32 \
   --temp 0 --seed 42 --offline
+BASH
 ```
 
 From the repository in another terminal, install the client following the README,
