@@ -41,7 +41,8 @@ inference-bench \
 `--csv-output` writes one row per measured request in request ID order. Failed
 requests are included, warmups are excluded, and unavailable values are empty.
 JSON still goes to stdout and can also be saved with `--output`. Use different
-paths for the JSON and CSV files.
+paths for the JSON and CSV files. Neither output path may contain the other.
+Conflicting paths are rejected before directories are created or requests are sent.
 
 The mock replies with fixed text and token counts. Its numbers test the client
 and protocol only. They are **not model, GPU, or server performance evidence**.

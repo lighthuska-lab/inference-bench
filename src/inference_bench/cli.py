@@ -85,12 +85,17 @@ def main(argv: list[str] | None = None) -> int:
             max_completion_tokens=args.max_completion_tokens,
             timeout_seconds=args.timeout,
         )
-        if (
-            args.output is not None
-            and args.csv_output is not None
-            and args.output.resolve() == args.csv_output.resolve()
-        ):
-            raise ValueError("JSON and CSV output paths must be different")
+        if args.output is not None and args.csv_output is not None:
+            json_output = args.output.resolve()
+            csv_output = args.csv_output.resolve()
+            if (
+                json_output == csv_output
+                or json_output in csv_output.parents
+                or csv_output in json_output.parents
+            ):
+                raise ValueError(
+                    "JSON and CSV output paths must be separate, not nested"
+                )
         with (
             _report_path(args.output) as json_path,
             _report_path(args.csv_output) as csv_path,

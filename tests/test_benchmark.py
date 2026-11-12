@@ -314,6 +314,39 @@ class TransportTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    def test_nested_report_paths_are_rejected_before_staging_or_requests(self):
+        for json_is_parent in (True, False):
+            with self.subTest(json_is_parent=json_is_parent):
+                with tempfile.TemporaryDirectory() as directory:
+                    parent = Path(directory) / "report"
+                    child = parent / "child"
+                    json_output, csv_output = (
+                        (parent, child) if json_is_parent else (child, parent)
+                    )
+                    report = {"results": [], "summary": {"failed_requests": 0}}
+                    with (
+                        patch(
+                            "inference_bench.cli.run_benchmark", return_value=report
+                        ) as run,
+                        contextlib.redirect_stdout(io.StringIO()),
+                        contextlib.redirect_stderr(io.StringIO()),
+                    ):
+                        code = main(
+                            [
+                                "--base-url",
+                                "http://host/v1",
+                                "--model",
+                                "m",
+                                "--output",
+                                str(json_output),
+                                "--csv-output",
+                                str(csv_output),
+                            ]
+                        )
+                    self.assertEqual(code, 2)
+                    run.assert_not_called()
+                    self.assertEqual(list(Path(directory).iterdir()), [])
+
     def test_output_directory_is_rejected_before_requests(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch("inference_bench.cli.run_benchmark") as run:
