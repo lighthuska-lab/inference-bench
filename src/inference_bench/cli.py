@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import sys
@@ -13,6 +14,14 @@ from pathlib import Path
 
 from inference_bench import __version__
 from inference_bench.benchmark import BenchmarkConfig, run_benchmark
+
+CSV_COLUMNS = (
+    "request_id",
+    "latency_ms",
+    "status_code",
+    "error",
+    "completion_tokens",
+)
 
 
 @contextmanager
@@ -52,6 +61,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--output", type=Path, help="Also save the JSON report to this file"
     )
+    parser.add_argument(
+        "--csv-output", type=Path, help="Save measured request outcomes as CSV"
+    )
     args = parser.parse_args(argv)
     try:
         prompt = (
@@ -73,12 +85,31 @@ def main(argv: list[str] | None = None) -> int:
             max_completion_tokens=args.max_completion_tokens,
             timeout_seconds=args.timeout,
         )
-        with _report_path(args.output) as temporary_path:
+        if (
+            args.output is not None
+            and args.csv_output is not None
+            and args.output.resolve() == args.csv_output.resolve()
+        ):
+            raise ValueError("JSON and CSV output paths must be different")
+        with (
+            _report_path(args.output) as json_path,
+            _report_path(args.csv_output) as csv_path,
+        ):
             report = run_benchmark(config, os.environ.get("INFERENCE_BENCH_API_KEY"))
             encoded = json.dumps(report, indent=2, allow_nan=False) + "\n"
-            if temporary_path:
-                temporary_path.write_text(encoded, encoding="utf-8")
-                temporary_path.replace(args.output)
+            if json_path is not None:
+                json_path.write_text(encoded, encoding="utf-8")
+            if csv_path is not None:
+                with csv_path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.writer(stream)
+                    writer.writerow(CSV_COLUMNS)
+                    # The runner returns measured results in request_id order.
+                    for result in report["results"]:
+                        writer.writerow(result[column] for column in CSV_COLUMNS)
+            if json_path is not None:
+                json_path.replace(args.output)
+            if csv_path is not None:
+                csv_path.replace(args.csv_output)
         sys.stdout.write(encoded)
         return 1 if report["summary"]["failed_requests"] else 0
     except (ValueError, OSError):

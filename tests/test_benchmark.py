@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import csv
 import io
 import json
 import os
@@ -375,6 +376,7 @@ class CliTests(unittest.TestCase):
             prompt = Path(directory) / "prompt.txt"
             prompt.write_text("Explain latency: 日本語", encoding="utf-8")
             output = Path(directory) / "reports" / "run.json"
+            csv_output = output.with_suffix(".csv")
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
                 code = main(
@@ -386,20 +388,128 @@ class CliTests(unittest.TestCase):
                         "--requests",
                         "2",
                         "--warmup",
-                        "0",
+                        "1",
                         "--prompt-file",
                         str(prompt),
                         "--output",
                         str(output),
+                        "--csv-output",
+                        str(csv_output),
                     ]
                 )
             self.assertEqual(code, 0)
             self.assertEqual(
                 json.loads(stdout.getvalue()), json.loads(output.read_text())
             )
+            with csv_output.open(encoding="utf-8", newline="") as stream:
+                rows = list(csv.DictReader(stream))
+            self.assertEqual(len(endpoint.requests), 3)
+            self.assertEqual([row["request_id"] for row in rows], ["0", "1"])
+            self.assertEqual([row["completion_tokens"] for row in rows], ["3", "3"])
             self.assertEqual(
                 endpoint.requests[0]["messages"][0]["content"], prompt.read_text()
             )
+
+    def test_csv_rows_include_failures_and_leave_missing_values_empty(self):
+        report = {
+            "results": [
+                {
+                    "request_id": 0,
+                    "latency_ms": 1.5,
+                    "status_code": 200,
+                    "error": None,
+                    "completion_tokens": 0,
+                    "content": "private response",
+                },
+                {
+                    "request_id": 1,
+                    "latency_ms": 2.5,
+                    "status_code": 429,
+                    "error": "http_error",
+                    "completion_tokens": None,
+                },
+                {
+                    "request_id": 2,
+                    "latency_ms": 3.5,
+                    "status_code": 200,
+                    "error": None,
+                    "completion_tokens": None,
+                },
+                {
+                    "request_id": 3,
+                    "latency_ms": 4.5,
+                    "status_code": None,
+                    "error": "timeout",
+                    "completion_tokens": None,
+                },
+            ],
+            "summary": {"failed_requests": 2},
+            "warmup": {"requests": 3, "failed_requests": 0},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "nested" / "run.csv"
+            with (
+                patch("inference_bench.cli.run_benchmark", return_value=report),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                code = main(
+                    [
+                        "--base-url",
+                        "http://host/v1",
+                        "--model",
+                        "m",
+                        "--csv-output",
+                        str(output),
+                    ]
+                )
+            self.assertEqual(code, 1)
+            with output.open(encoding="utf-8", newline="") as stream:
+                self.assertEqual(
+                    list(csv.reader(stream)),
+                    [
+                        [
+                            "request_id",
+                            "latency_ms",
+                            "status_code",
+                            "error",
+                            "completion_tokens",
+                        ],
+                        ["0", "1.5", "200", "", "0"],
+                        ["1", "2.5", "429", "http_error", ""],
+                        ["2", "3.5", "200", "", ""],
+                        ["3", "4.5", "", "timeout", ""],
+                    ],
+                )
+
+    def test_invalid_csv_output_preserves_json_and_skips_requests(self):
+        with tempfile.TemporaryDirectory() as directory:
+            json_output = Path(directory) / "run.json"
+            json_output.write_text("previous report", encoding="utf-8")
+            for csv_output in (
+                directory,
+                str(json_output / "nested"),
+                str(json_output),
+            ):
+                with (
+                    self.subTest(csv_output=csv_output),
+                    patch("inference_bench.cli.run_benchmark") as run,
+                    contextlib.redirect_stderr(io.StringIO()),
+                ):
+                    code = main(
+                        [
+                            "--base-url",
+                            "http://host/v1",
+                            "--model",
+                            "m",
+                            "--output",
+                            str(json_output),
+                            "--csv-output",
+                            csv_output,
+                        ]
+                    )
+                    self.assertEqual(code, 2)
+                    run.assert_not_called()
+                    self.assertEqual(json_output.read_text(), "previous report")
 
     def test_failed_request_yields_json_and_nonzero_exit(self):
         with LocalEndpoint() as endpoint:
