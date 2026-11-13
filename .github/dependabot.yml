@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    groups:
+      python-tooling:
+        patterns: ["*"]
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    groups:
+      github-actions:
+        patterns: ["*"]
+        update-types: [minor, patch]

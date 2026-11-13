@@ -114,8 +114,11 @@ smoke tests, not reliable p99 comparisons. See [the methodology](docs/methodolog
 
 ## Develop and collaborate
 
+See [the maintenance pipeline](docs/automation.md) for scheduled checks,
+dependency-update PRs, review-gated auto-merge, and release-on-tag instructions.
+
 ```bash
-python -m pip install -e . ruff==0.14.4 build==1.3.0
+python -m pip install -e . -r requirements-dev.txt
 ruff check .
 ruff format --check .
 python -m unittest discover -s tests -v

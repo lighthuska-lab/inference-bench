@@ -12,6 +12,11 @@ Reviewers should read the diff, run relevant tests, and provide concrete feedbac
 An approval should mean the reviewer actually checked the change. Authors should
 address feedback before requesting another review.
 
+Automation follows the same review requirement. Dependabot opens real dependency
+updates. Eligible updates can be queued for auto-merge, but a maintainer must
+review them and all required CI jobs must pass. New commits invalidate prior
+approvals. See [the pipeline guide](docs/automation.md).
+
 Keep each person's author identity on their commits. Add a `Co-authored-by`
 trailer only when the named person actually helped create that commit and agrees
 to the attribution. GitHub achievements are not a reason to invent work, credit,
