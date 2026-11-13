@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "tool_version": "0.1.0",
+  "started_at": "2026-11-12T21:57:02.986024+00:00",
+  "python_version": "3.12.16",
+  "config": {
+    "base_url": "http://127.0.0.1:18765/v1",
+    "model": "smollm2-135m-q4-k-m",
+    "prompt_sha256": "c13dadaf81abc1a1d4e31d287b04350bb78ea1092cb70c962c6cad760e19a227",
+    "requests": 2,
+    "concurrency": 2,
+    "effective_concurrency": 2,
+    "warmup": 0,
+    "max_completion_tokens": 16,
+    "timeout_seconds": 60.0,
+    "stream": false
+  },
+  "warmup": {
+    "requests": 0,
+    "failed_requests": 0
+  },
+  "summary": {
+    "requests": 2,
+    "successful_requests": 2,
+    "failed_requests": 0,
+    "error_rate": 0.0,
+    "errors": {},
+    "elapsed_seconds": 0.834892401995603,
+    "successful_requests_per_second": 2.395518267047941,
+    "latency_ms": {
+      "mean": 778.5907335055526,
+      "min": 765.2650829986669,
+      "p50": 778.5907335055526,
+      "p95": 790.5838189617498,
+      "p99": 791.6498710023006,
+      "max": 791.9163840124384
+    },
+    "requests_with_token_usage": 2,
+    "observed_completion_tokens": 32,
+    "completion_tokens_per_second": 38.32829227276706
+  },
+  "results": [
+    {
+      "request_id": 0,
+      "latency_ms": 765.2650829986669,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 1,
+      "latency_ms": 791.9163840124384,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    }
+  ]
+}

@@ -124,11 +124,15 @@ python -m build
 
 Tests run against local HTTP fixtures and need no API key, GPU, model download,
 or external inference service. CI runs the same checks on Python 3.11–3.14.
-Live inference compatibility has not been validated yet.
+One [local llama.cpp CPU configuration](validation/llama-cpu/README.md) has been
+validated with real model inference. This does not establish compatibility with
+every provider or model.
 
-CSV export is the first teammate task. Follow [the teammate guide](docs/teamwork.md)
-and [CONTRIBUTING.md](CONTRIBUTING.md). Streaming metrics and real-backend
-validation are separate follow-up tasks. This repository is not published on PyPI.
+CSV export was contributed by [Jeff Walsh](https://github.com/jeffwalsh728-tech)
+in [PR #3](https://github.com/lighthuska-lab/inference-bench/pull/3). Follow
+[the teammate guide](docs/teamwork.md) and [CONTRIBUTING.md](CONTRIBUTING.md) for
+review and attribution expectations. Streaming metrics remain future work.
+This repository is not published on PyPI.
 
 ## License
 

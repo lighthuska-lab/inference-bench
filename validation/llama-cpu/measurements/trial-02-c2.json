@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "tool_version": "0.1.0",
+  "started_at": "2026-11-12T21:55:51.968916+00:00",
+  "python_version": "3.12.16",
+  "config": {
+    "base_url": "http://127.0.0.1:18765/v1",
+    "model": "smollm2-135m-q4-k-m",
+    "prompt_sha256": "c13dadaf81abc1a1d4e31d287b04350bb78ea1092cb70c962c6cad760e19a227",
+    "requests": 8,
+    "concurrency": 2,
+    "effective_concurrency": 2,
+    "warmup": 1,
+    "max_completion_tokens": 16,
+    "timeout_seconds": 60,
+    "stream": false
+  },
+  "warmup": {
+    "requests": 1,
+    "failed_requests": 0
+  },
+  "summary": {
+    "requests": 8,
+    "successful_requests": 8,
+    "failed_requests": 0,
+    "error_rate": 0.0,
+    "errors": {},
+    "elapsed_seconds": 3.363301292003598,
+    "successful_requests_per_second": 2.378615326263027,
+    "latency_ms": {
+      "mean": 819.3343493730936,
+      "min": 436.5501550055342,
+      "p50": 765.1986759956344,
+      "p95": 1301.143875453272,
+      "p99": 1309.7777406900423,
+      "max": 1311.9362069992349
+    },
+    "requests_with_token_usage": 8,
+    "observed_completion_tokens": 128,
+    "completion_tokens_per_second": 38.057845220208435
+  },
+  "results": [
+    {
+      "request_id": 0,
+      "latency_ms": 1281.1009740107693,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 1,
+      "latency_ms": 1311.9362069992349,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 2,
+      "latency_ms": 903.2294749922585,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 3,
+      "latency_ms": 871.3730210001813,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 4,
+      "latency_ms": 659.0243309910875,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 5,
+      "latency_ms": 652.8993819956668,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 6,
+      "latency_ms": 438.5612499900162,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    },
+    {
+      "request_id": 7,
+      "latency_ms": 436.5501550055342,
+      "status_code": 200,
+      "error": null,
+      "completion_tokens": 16
+    }
+  ]
+}
