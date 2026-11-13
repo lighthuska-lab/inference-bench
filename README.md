@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/lighthuska-lab/inference-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/lighthuska-lab/inference-bench/actions/workflows/ci.yml)
 
-Measure non-streaming latency, throughput, and failures for an OpenAI-compatible
+Measure latency, throughput, and failures for an OpenAI-compatible
 Chat Completions endpoint. Run a fixed number of requests with bounded concurrency
 and save individual outcomes alongside summary statistics.
 
@@ -51,7 +51,7 @@ See [the example report](examples/mock-report.json) for the JSON layout.
 ## Benchmark your own endpoint
 
 Use the versioned API base URL and a model identifier that the server actually
-serves. The client appends `/chat/completions` and sends `stream: false` with
+serves. The client appends `/chat/completions` and defaults to `stream: false` with
 `max_completion_tokens`. Servers that only accept the older `max_tokens` field
 are not supported yet. This is not an Azure deployment-specific client or a
 Responses API client.
@@ -100,8 +100,40 @@ endpoints. Redirects are rejected. No retries are performed.
    effective concurrency is capped by the measured request count.
 5. `--timeout` is a socket-operation timeout, not a strict end-to-end deadline.
    A server that trickles bytes can keep a request alive longer. Responses above
-   8 MiB are rejected. There is no streaming, time-to-first-token, per-token
-   latency, quality scoring, connection pooling, or GPU utilization measurement.
+   8 MiB are rejected (the entire SSE stream in streaming mode). There is no
+   token-level latency, quality scoring, connection pooling, or GPU utilization
+   measurement.
+
+## Streaming first-content latency
+
+Add `--stream` to measure client-observed time from HTTP-attempt start to the
+first nonempty text content delta. Role-only and empty deltas do not stop this
+timer. A chunk may contain multiple tokens: **first-content latency is a TTFT
+proxy, not token-level server timing**. Connection setup and network buffering
+are included. This option sends `stream_options: {"include_usage": true}`;
+servers must support this request or return a visible failure.
+
+JSON adds nullable `results[].first_content_ms` and
+`summary.first_content_ms` with sample count, mean, p50, p95 and p99. Summary
+samples include only successful measured requests with nonempty content.
+Successful empty-text responses, failed requests and non-streaming requests
+have null first-content values. Warmups remain excluded. The five CSV columns
+are unchanged; streaming timing is available in JSON only.
+
+A successful stream must have one text choice, a supported finish reason
+(`stop`, `length` or `content_filter`), and a complete `data: [DONE]` event.
+Final usage-only events are allowed after the finish. Missing usage stays
+unknown; chunks and characters are never converted into estimated tokens.
+Malformed events, unsupported tools/multimodal data, invalid UTF-8, missing
+finish/DONE, timeouts and disconnects are recorded as failures. Incomplete
+attempts discard both token counts and first-content values. Complete latency
+ends at DONE rather than waiting for the server to close its connection.
+
+The SSE reader handles LF, CRLF, CR, comments, multiline data and UTF-8/network
+boundaries. No retries or reconnects occur. The bundled mock endpoint supports
+the non-streaming demo; streaming tests use separate adversarial HTTP fixtures.
+See [the streaming validation](validation/llama-streaming/README.md) for the
+pinned local CPU backend compatibility check.
 
 All-failed runs have `null` latency percentiles and token throughput. A successful
 response must have a JSON `choices[0].message.content` string. Tool-only or
@@ -124,11 +156,10 @@ python -m build
 
 Tests run against local HTTP fixtures and need no API key, GPU, model download,
 or external inference service. CI runs the same checks on Python 3.11–3.14.
-Live inference compatibility has not been validated yet.
+The retained streaming validation covers one pinned local backend/model only.
 
-CSV export is the first teammate task. Follow [the teammate guide](docs/teamwork.md)
-and [CONTRIBUTING.md](CONTRIBUTING.md). Streaming metrics and real-backend
-validation are separate follow-up tasks. This repository is not published on PyPI.
+CSV export was contributed by Jeff Walsh. Follow [the teammate guide](docs/teamwork.md)
+and [CONTRIBUTING.md](CONTRIBUTING.md). This repository is not published on PyPI.
 
 ## License
 
