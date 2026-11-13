@@ -1,0 +1,12 @@
+{
+  "python": "3.12.16",
+  "platform": "macOS-26.7.2-x86_64-i386-64bit",
+  "source_sha256": {
+    "__init__.py": "99983295dc28d7da49e506c60370a095c23318e4866695d2399e85282f3643f2",
+    "__main__.py": "c9e91b77864ab1ce533a0ad8b9efcf58086154aad166769343e540f2eccbf498",
+    "benchmark.py": "37b5cf0dedf917b2fce2c1dd720c1a8e0f64525633e2de4103c8d108f62b80b7",
+    "cli.py": "9e78890589edcfd5f2a11ee482deb1747f0e9762032b8a48dec39088694c225b",
+    "streaming.py": "bbe4f4b8ab96925b2e6be87bde88ad408e350f89264e5eb9977d290804a0810a"
+  },
+  "purpose": "loopback CPU compatibility, not a capacity or p99 comparison"
+}

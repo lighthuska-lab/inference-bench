@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "inference-bench"
 version = "0.1.0"
-description = "Benchmark non-streaming OpenAI-compatible inference endpoints."
+description = "Benchmark OpenAI-compatible inference endpoints and streaming latency."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

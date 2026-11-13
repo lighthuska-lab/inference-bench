@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from inference_bench import __version__
+from inference_bench.streaming import StreamTooLarge, events
 
 MAX_RESPONSE_BYTES = 8 * 1024 * 1024
 
@@ -55,9 +56,12 @@ class BenchmarkConfig:
     warmup: int = 1
     max_completion_tokens: int = 64
     timeout_seconds: float = 30.0
+    stream: bool = False
 
     def __post_init__(self) -> None:
         completion_url(self.base_url)
+        if type(self.stream) is not bool:
+            raise ValueError("stream must be a boolean")
         if not self.model.strip() or not self.prompt.strip():
             raise ValueError("model and prompt must not be empty")
         for name in ("requests", "concurrency", "max_completion_tokens"):
@@ -77,6 +81,7 @@ class RequestResult:
     status_code: int | None
     error: str | None
     completion_tokens: int | None = None
+    first_content_ms: float | None = None
 
 
 class _NoRedirects(urllib.request.HTTPRedirectHandler):
@@ -88,15 +93,18 @@ class _NoRedirects(urllib.request.HTTPRedirectHandler):
 def perform_request(
     request_id: int, config: BenchmarkConfig, api_key: str | None = None
 ) -> RequestResult:
-    payload = json.dumps(
-        {
-            "model": config.model,
-            "messages": [{"role": "user", "content": config.prompt}],
-            "max_completion_tokens": config.max_completion_tokens,
-            "stream": False,
-        }
-    ).encode("utf-8")
+    parameters = {
+        "model": config.model,
+        "messages": [{"role": "user", "content": config.prompt}],
+        "max_completion_tokens": config.max_completion_tokens,
+        "stream": config.stream,
+    }
+    if config.stream:
+        parameters["stream_options"] = {"include_usage": True}
+    payload = json.dumps(parameters).encode("utf-8")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    if config.stream:
+        headers["Accept"] = "text/event-stream"
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     request = urllib.request.Request(
@@ -106,12 +114,19 @@ def perform_request(
     status_code = None
     error = None
     tokens = None
+    first_content_ms = None
     started = time.perf_counter()
     try:
         with opener.open(request, timeout=config.timeout_seconds) as response:
             status_code = response.status
-            body = response.read(MAX_RESPONSE_BYTES + 1)
-            if len(body) > MAX_RESPONSE_BYTES:
+            if config.stream:
+                first_content_ms, tokens = read_completion_stream(response, started)
+                body = None
+            else:
+                body = response.read(MAX_RESPONSE_BYTES + 1)
+            if body is None:
+                pass
+            elif len(body) > MAX_RESPONSE_BYTES:
                 error = "response_too_large"
             else:
                 data = json.loads(body)
@@ -143,14 +158,70 @@ def perform_request(
         error = (
             "timeout" if isinstance(exception.reason, TimeoutError) else "network_error"
         )
-    except (json.JSONDecodeError, UnicodeDecodeError):
+    except StreamTooLarge:
+        error = "response_too_large"
+    except (ValueError, UnicodeDecodeError):
         error = "invalid_response"
     except http.client.IncompleteRead:
         error = "incomplete_response"
     except (OSError, http.client.HTTPException):
         error = "network_error"
     latency_ms = (time.perf_counter() - started) * 1000
-    return RequestResult(request_id, latency_ms, status_code, error, tokens)
+    return RequestResult(
+        request_id, latency_ms, status_code, error, tokens, first_content_ms
+    )
+
+
+def read_completion_stream(response, started: float) -> tuple[float | None, int | None]:
+    """A finished single text choice followed by [DONE] constitutes success."""
+    if response.headers.get_content_type() != "text/event-stream":
+        raise ValueError("invalid stream content type")
+    finished = False
+    first_content_ms = None
+    tokens = None
+    for event in events(response, MAX_RESPONSE_BYTES):
+        if event == "[DONE]":
+            if not finished:
+                raise ValueError("missing finish reason")
+            return first_content_ms, tokens
+        data = json.loads(event)
+        if not isinstance(data, dict) or "error" in data:
+            raise ValueError("invalid stream event")
+        choices = data.get("choices")
+        if not isinstance(choices, list):
+            raise ValueError("missing choices")
+        usage = data.get("usage")
+        if isinstance(usage, dict):
+            count = usage.get("completion_tokens")
+            if type(count) is int and count >= 0:
+                tokens = count
+        if not choices:
+            if not finished or not isinstance(usage, dict):
+                raise ValueError("unexpected empty choices")
+            continue
+        if len(choices) != 1 or not isinstance(choices[0], dict):
+            raise ValueError("expected a single choice")
+        choice = choices[0]
+        delta = choice.get("delta")
+        if finished or not isinstance(delta, dict):
+            raise ValueError("invalid delta")
+        if delta.get("tool_calls") or delta.get("function_call"):
+            raise ValueError("tool-only streams are unsupported")
+        content = delta.get("content")
+        if content is not None and not isinstance(content, str):
+            raise ValueError("invalid content")
+        if content and first_content_ms is None:
+            first_content_ms = (time.perf_counter() - started) * 1000
+        reason = choice.get("finish_reason")
+        if reason is not None:
+            if not isinstance(reason, str) or reason not in {
+                "stop",
+                "length",
+                "content_filter",
+            }:
+                raise ValueError("unsupported finish reason")
+            finished = True
+    raise http.client.IncompleteRead(b"")
 
 
 def percentile(values: list[float], fraction: float) -> float | None:
@@ -171,6 +242,11 @@ def summarize(results: list[RequestResult], elapsed_seconds: float) -> dict[str,
         raise ValueError("elapsed_seconds must be finite and positive")
     successful = [result for result in results if result.error is None]
     latencies = [result.latency_ms for result in successful]
+    first_content = [
+        result.first_content_ms
+        for result in successful
+        if result.first_content_ms is not None
+    ]
     counts = [
         result.completion_tokens
         for result in successful
@@ -194,6 +270,13 @@ def summarize(results: list[RequestResult], elapsed_seconds: float) -> dict[str,
             "max": max(latencies) if latencies else None,
         },
         "requests_with_token_usage": len(counts),
+        "first_content_ms": {
+            "samples": len(first_content),
+            "mean": statistics.mean(first_content) if first_content else None,
+            "p50": percentile(first_content, 0.50),
+            "p95": percentile(first_content, 0.95),
+            "p99": percentile(first_content, 0.99),
+        },
         "observed_completion_tokens": sum(counts),
         "completion_tokens_per_second": (
             sum(counts) / elapsed_seconds if complete_usage else None
@@ -231,7 +314,7 @@ def run_benchmark(
             "warmup": config.warmup,
             "max_completion_tokens": config.max_completion_tokens,
             "timeout_seconds": config.timeout_seconds,
-            "stream": False,
+            "stream": config.stream,
         },
         "warmup": {
             "requests": len(warmups),

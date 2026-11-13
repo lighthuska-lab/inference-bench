@@ -41,7 +41,7 @@ def _report_path(target: Path | None) -> Iterator[Path | None]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Benchmark a non-streaming OpenAI-compatible Chat Completions API."
+        description="Benchmark an OpenAI-compatible Chat Completions API."
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--base-url", required=True, help="API base, including /v1")
@@ -54,6 +54,9 @@ def main(argv: list[str] | None = None) -> int:
         "--prompt-file", type=Path, help="Read a UTF-8 prompt from disk"
     )
     parser.add_argument("--requests", type=int, default=10)
+    parser.add_argument(
+        "--stream", action="store_true", help="Measure streaming first-content latency"
+    )
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--warmup", type=int, default=1)
     parser.add_argument("--max-completion-tokens", type=int, default=64)
@@ -84,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
             warmup=args.warmup,
             max_completion_tokens=args.max_completion_tokens,
             timeout_seconds=args.timeout,
+            stream=args.stream,
         )
         if args.output is not None and args.csv_output is not None:
             json_output = args.output.resolve()

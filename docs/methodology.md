@@ -4,7 +4,8 @@ Use an endpoint you own or have permission to load test. Begin with a small
 request count and low concurrency. Warmups and failed requests can still incur
 provider charges. This project does not make paid calls during its own tests.
 
-The client sends a single user message with `stream: false`. A request starts
+The client sends a single user message with `stream: false` by default, or
+`stream: true` with `--stream`. A request starts
 when a worker begins its HTTP attempt and ends when the response has been read
 and validated. The run timer starts before worker creation and ends after all
 measured attempts finish. No requests are retried or followed across redirects.
@@ -35,7 +36,10 @@ of requests. Do not compare mock data with real inference measurements.
 `config` describes the workload, including the SHA-256 of the UTF-8 prompt text.
 `warmup` counts excluded attempts and their failures. `summary` aggregates only
 measured requests. `results` has one record per measured attempt, with
-`request_id`, `latency_ms`, `status_code`, `error`, and `completion_tokens`.
+`request_id`, `latency_ms`, `status_code`, `error`, `completion_tokens`, and
+nullable `first_content_ms`. The first-content summary uses only successful
+measured requests with nonempty content; its sample count may be lower than
+the successful request count. CSV retains its original five columns.
 Missing values are JSON `null`. Error categories are `http_error`, `network_error`,
 `timeout`, `invalid_response`, `incomplete_response`, and `response_too_large`.
 
